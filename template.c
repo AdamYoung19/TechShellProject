@@ -1,10 +1,25 @@
-// Name(s):
-// Description:
+// Name(s): Adam Young, Jaylin Rashaw Ealy, Ethan Flanagan
+// Description: Skeleton code for a simple shell implementation in C.
 
+//All the includes
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
 
-//////// Some function ideas: ////////////
-// Note: Some code is reflected in main that represents these functions,
-// but it is up to you to determine how you want to organize your code.
+#define MAX_INPUT 1024 // Maximum input size
+
+struct ShellCommand {
+    char* command;          // The command itself
+    char** args;           // Arguments for the command
+    int argCount;          // Number of arguments
+    char* inputRedirect;   // Input redirection file
+    char* outputRedirect;  // Output redirection file
+    int appendOutput;      // Flag for append mode (>>)
+};
 
 /* 
     A function that causes the prompt to 
