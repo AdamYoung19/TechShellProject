@@ -14,7 +14,7 @@
 
 struct ShellCommand {
     char* command;          // The command itself
-    char** args;           // Arguments for the command
+    char* args[100];           // Arguments for the command
     int argCount;          // Number of arguments
     char* inputRedirect;   // Input redirection file
     char* outputRedirect;  // Output redirection file
@@ -26,33 +26,50 @@ struct ShellCommand {
     display in the terminal
 */
 
-/*
-    A function that takes input from the user.
-    It may return return the input to the calling statement or 
-    store it at some memory location using a pointer.
-*/ 
+char* getInput() {
+    // 1. buffer for user text
+    char* buffer = malloc(MAX_INPUT);
 
-/*
-    A function that parses through the user input.
-    Consider having this function return a struct that stores vital
-    information about the parsed instruction such as:
-    - The command itself
-    - The arguments that come after the command 
-        Hint: When formatting your data, 
-        look into execvp and how it takes in args.
-    - Information about if a redirect was detected such as >, <, or |
-    - Information about whether or not a new file 
-        needs to be created and what that filename may be.
-    
+    //2. Get the input
+    if (buffer == NULL) {
+        return NULL;
+    }
 
-    Some helpful functions when doing this come from string.h and stdlib.h, such as
-    strtok, strcmp, strcpy, calloc, malloc, realloc, free, and more
+    // 3. Strip the newline
+    buffer[strcspn(buffer, "\n")] = '\0';
 
-    Be sure to consider/test for situations when a backslash is used to escape the space char
-    and when quotes are used to group together various tokens.
-*/
+    return buffer;
+}
 
-/*
+struct ShellCommand parseInput(char* input) {
+    struct ShellCommand cmd;
+
+    // Initialize structo to zero
+    memset(&cmd, 0, sizeof(struct ShellCommand));
+
+    int i = 0;
+
+    // Start Tokenizing
+    char* token = strtok(input, " ");
+    while (token != NULL) {
+        // Store the token in argument array
+        cmd.args[i] = token;
+        i++;
+
+        // Get next token
+        token = strtok(NULL, " ");
+    }
+    cmd.args[i] = NULL; // all args end NULL
+    cmd.argCount = i;
+
+    if (i > 0) {
+        cmd.command = cmd.args[0]; 
+    }
+    return cmd;
+    }
+
+
+    /*
     A function that executes the command. 
     This function might take in a struct that represents the shell command.
 
@@ -97,3 +114,9 @@ int main() // MAIN
 	exit(0);
 }
 
+
+void displayPrompt() {
+    printf("$ ");
+}
+
+void executeCommand(struct ShellCommand cmd) {return 0;}
