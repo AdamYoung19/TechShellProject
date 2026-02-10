@@ -20,12 +20,13 @@ struct ShellCommand {
     int appendOutput;
 };
 
-// --- FIXED: Added Prototypes so main() knows these functions exist ---
+// --- Function Prototypes ---
 void displayPrompt();
 char* getInput();
 struct ShellCommand parseInput(char* input);
 void executeCommand(struct ShellCommand cmd);
 
+// -- Main Function ---
 int main() {
     char* input;
     struct ShellCommand command;
@@ -57,7 +58,6 @@ int main() {
 // --- Function Definitions ---
 
 void displayPrompt() {
-    // FIXED: Use getcwd to match the rubric requirement
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         printf("%s$ ", cwd);
@@ -67,10 +67,11 @@ void displayPrompt() {
 }
 
 char* getInput() {
+    // Allocate a buffer to hold the user's input
     char* buffer = malloc(MAX_INPUT);
     if (buffer == NULL) return NULL;
 
-    // FIXED: Actually read the input!
+    // Read a line of input from the user
     if (fgets(buffer, MAX_INPUT, stdin) == NULL) {
         free(buffer);
         return NULL;
@@ -102,11 +103,57 @@ struct ShellCommand parseInput(char* input) {
 }
 
 void executeCommand(struct ShellCommand cmd) {
-    // FIXED: Removed "return 0" because this is a void function
     
     // Check if a command was actually entered
     if (cmd.command == NULL) return;
 
-    // Temporary print to prove it works
-    printf("Debug: You typed command '%s'\n", cmd.command);
+    // Handle built-in commands like 'exit'
+    if(strcmp(cmd.command, "exit") == 0) {
+        exit(0);
+    }
+
+    // Handle built-in commands like 'cd'
+    if(strcmp(cmd.command, "cd") == 0) {
+        // if argument provided
+        if (cmd.argCount > 1) {
+            if (chdir(cmd.args[1]) != 0) {
+                perror("You can't do that lol");
+            }
+            // if no argument provided, change to home directory
+            
+        }
+        else {
+                chdir(getenv("HOME"));
+            }
+        return;
+    }
+
+    // External Commands
+    pid_t pid = fork();
+
+    // In case of error
+    if (pid < 0) {
+        perror("YOU AERE A FAILURE");
+        exit(1);
+    }
+
+    // Child process
+    else if (pid == 0) {
+        // execvp looks for another command
+        execvp(cmd.command, cmd.args);
+
+
+        // Just in case execvp fails
+        printf("Error Command '%s' not found\n", cmd.command);
+        exit(1);
+    }
+
+    // Parent process
+    else {
+        int status;
+
+        //waits for the child process to finish
+        waitpid(pid, &status, 0);
+    }
+
 }
