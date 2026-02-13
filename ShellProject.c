@@ -88,13 +88,13 @@ struct ShellCommand parseInput(char* input) {
     // This splits inputs into tokens basesd on spaces. 
     //Doesn't handle quotes or speial characters
     int i = 0;
-    char* token = strtok(input, " ");
+    char* token = strtok(input, " \t\n");
     while (token != NULL) {
 
         // Check for output redirection
         // This takes > and makes the next token the output file
         if (strcmp(token, ">") == 0) {
-            token = strtok(NULL, " ");
+            token = strtok(NULL, " \t\n");
             if (token != NULL) {
                 cmd.outputRedirect = token;
             }
@@ -190,7 +190,7 @@ void executeCommand(struct ShellCommand cmd) {
 
 
         // Just in case execvp fails
-        printf("Error Command '%s' not found\n", cmd.command);
+       perror("Exec failed");
         exit(1);
     }
 
