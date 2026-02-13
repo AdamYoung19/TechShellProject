@@ -48,7 +48,6 @@ int main() {
         // execute the command
         executeCommand(command);
         
-        // Note: You should technically free(input) here to avoid memory leaks!
         free(input); 
     }
 
@@ -86,16 +85,39 @@ struct ShellCommand parseInput(char* input) {
     struct ShellCommand cmd;
     memset(&cmd, 0, sizeof(struct ShellCommand));
 
+    // This splits inputs into tokens basesd on spaces. 
+    //Doesn't handle quotes or speial characters
     int i = 0;
     char* token = strtok(input, " ");
     while (token != NULL) {
-        cmd.args[i] = token;
-        i++;
+
+        // Check for output redirection
+        // This takes > and makes the next token the output file
+        if (strcmp(token, ">") == 0) {
+            token = strtok(NULL, " ");
+            if (token != NULL) {
+                cmd.outputRedirect = token;
+            }
+        }
+        // Check for input redirection
+        // This takes < and makes the next token the input file
+        else if (strcmp(token, "<") == 0) {
+            token = strtok(NULL, " ");
+            if (token != NULL) {
+                cmd.inputRedirect = token;
+            }
+        }
+        // Normal arguments like (ls, -l, etc.)
+        else {
+            cmd.args[i] = token;
+            i++;
+        }
         token = strtok(NULL, " ");
     }
     cmd.args[i] = NULL; 
     cmd.argCount = i;
 
+    // sets command as the first argument, if not it's NULL
     if (i > 0) {
         cmd.command = cmd.args[0]; 
     }
@@ -139,6 +161,30 @@ void executeCommand(struct ShellCommand cmd) {
 
     // Child process
     else if (pid == 0) {
+
+        //Input Redirection (<)
+        if (cmd.inputRedirect != NULL) {
+            FILE* inputfile = fopen(cmd.inputRedirect, "r"); // Open for reading
+            if (inputfile == NULL) {
+                perror("Failed to open input file");
+                exit(1);
+            }
+            // Redirect standard input to the input file
+            dup2(fileno(inputfile), STDIN_FILENO); 
+            fclose(inputfile); // Close the file
+        }
+
+        // Output Redirection (>)
+        if (cmd.outputRedirect != NULL) {
+            FILE* outputfile = fopen(cmd.outputRedirect, "w"); // Open for Writing
+            if (outputfile == NULL) {
+                perror("Failed to open output file");
+                exit(1);
+            }
+            // Redirect standard output to the output file
+            dup2(fileno(outputfile), STDOUT_FILENO); 
+            fclose(outputfile); // Close the file
+        }
         // execvp looks for another command
         execvp(cmd.command, cmd.args);
 
